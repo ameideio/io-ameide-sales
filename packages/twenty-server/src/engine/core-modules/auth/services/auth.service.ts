@@ -37,6 +37,7 @@ import { type CheckUserExistDTO } from 'src/engine/core-modules/auth/dto/user-ex
 import { type WorkspaceInviteHashValidDTO } from 'src/engine/core-modules/auth/dto/workspace-invite-hash-valid.dto';
 import { AuthSsoService } from 'src/engine/core-modules/auth/services/auth-sso.service';
 import { SignInUpService } from 'src/engine/core-modules/auth/services/sign-in-up.service';
+import { type AmeideOidcRequest } from 'src/engine/core-modules/auth/strategies/ameide-oidc.auth.strategy';
 import { type GoogleRequest } from 'src/engine/core-modules/auth/strategies/google.auth.strategy';
 import { type MicrosoftRequest } from 'src/engine/core-modules/auth/strategies/microsoft.auth.strategy';
 import { AccessTokenService } from 'src/engine/core-modules/auth/token/services/access-token.service';
@@ -926,8 +927,11 @@ export class AuthService {
       billingCheckoutSessionState,
       action,
       locale,
-    }: MicrosoftRequest['user'] | GoogleRequest['user'],
-    authProvider: AuthProviderEnum.Google | AuthProviderEnum.Microsoft,
+    }: MicrosoftRequest['user'] | GoogleRequest['user'] | AmeideOidcRequest['user'],
+    authProvider:
+      | AuthProviderEnum.Google
+      | AuthProviderEnum.Microsoft
+      | AuthProviderEnum.AmeideOidc,
   ): Promise<string> {
     const email = rawEmail.toLowerCase();
 

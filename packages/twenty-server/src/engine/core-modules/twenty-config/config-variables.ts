@@ -217,6 +217,62 @@ export class ConfigVariables {
 
   @ConfigVariablesMetadata({
     group: ConfigVariablesGroup.OTHER,
+    description: 'Enable or disable Ameide Keycloak OIDC Single Sign-On (SSO)',
+    type: ConfigVariableType.BOOLEAN,
+  })
+  @IsOptional()
+  AUTH_AMEIDE_OIDC_ENABLED = false;
+
+  @ConfigVariablesMetadata({
+    group: ConfigVariablesGroup.OTHER,
+    isSensitive: false,
+    description: 'OIDC issuer URL for Ameide Keycloak (canonical issuer)',
+    type: ConfigVariableType.STRING,
+  })
+  @IsUrl({ require_tld: false, require_protocol: true })
+  @ValidateIf((env) => env.AUTH_AMEIDE_OIDC_ENABLED)
+  AUTH_AMEIDE_OIDC_ISSUER_URL: string;
+
+  @ConfigVariablesMetadata({
+    group: ConfigVariablesGroup.OTHER,
+    isSensitive: false,
+    description: 'OIDC client id for Ameide Keycloak',
+    type: ConfigVariableType.STRING,
+  })
+  @ValidateIf((env) => env.AUTH_AMEIDE_OIDC_ENABLED)
+  AUTH_AMEIDE_OIDC_CLIENT_ID: string;
+
+  @ConfigVariablesMetadata({
+    group: ConfigVariablesGroup.OTHER,
+    isSensitive: true,
+    description: 'OIDC client secret for Ameide Keycloak',
+    type: ConfigVariableType.STRING,
+  })
+  @ValidateIf((env) => env.AUTH_AMEIDE_OIDC_ENABLED)
+  AUTH_AMEIDE_OIDC_CLIENT_SECRET: string;
+
+  @ConfigVariablesMetadata({
+    group: ConfigVariablesGroup.OTHER,
+    isSensitive: false,
+    description: 'OIDC callback URL for Ameide Keycloak (must match Keycloak client redirect URI)',
+    type: ConfigVariableType.STRING,
+  })
+  @IsUrl({ require_tld: false, require_protocol: true })
+  @ValidateIf((env) => env.AUTH_AMEIDE_OIDC_ENABLED)
+  AUTH_AMEIDE_OIDC_CALLBACK_URL: string;
+
+  @ConfigVariablesMetadata({
+    group: ConfigVariablesGroup.OTHER,
+    isSensitive: false,
+    description: 'Post-logout redirect URL after Keycloak logout',
+    type: ConfigVariableType.STRING,
+  })
+  @IsUrl({ require_tld: false, require_protocol: true })
+  @ValidateIf((env) => env.AUTH_AMEIDE_OIDC_ENABLED)
+  AUTH_AMEIDE_OIDC_POST_LOGOUT_REDIRECT_URL: string;
+
+  @ConfigVariablesMetadata({
+    group: ConfigVariablesGroup.OTHER,
     description:
       'Enable or disable the seeding of standard record page layouts',
     type: ConfigVariableType.BOOLEAN,
