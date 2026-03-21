@@ -45,6 +45,10 @@ import { isDefined } from 'twenty-shared/utils';
 import { AnalyticsType } from '~/generated-metadata/graphql';
 import { usePageChangeEffectNavigateLocation } from '~/hooks/usePageChangeEffectNavigateLocation';
 import { useInitializeQueryParamState } from '~/modules/app/hooks/useInitializeQueryParamState';
+import {
+  REACT_APP_FORCED_AUTH_PROVIDER,
+  REACT_APP_SERVER_BASE_URL,
+} from '~/config';
 import { isMatchingLocation } from '~/utils/isMatchingLocation';
 import { getPageTitleFromPath } from '~/utils/title-utils';
 
@@ -169,6 +173,14 @@ export const PageChangeEffect = () => {
 
       const consumedReturnToPath =
         getReturnToPath() === pageChangeEffectNavigateLocation;
+
+      if (
+        pageChangeEffectNavigateLocation === AppPath.SignInUp &&
+        REACT_APP_FORCED_AUTH_PROVIDER === 'ameideOidc'
+      ) {
+        window.location.assign(`${REACT_APP_SERVER_BASE_URL}/auth/ameide-oidc`);
+        return;
+      }
 
       navigate(pageChangeEffectNavigateLocation);
 

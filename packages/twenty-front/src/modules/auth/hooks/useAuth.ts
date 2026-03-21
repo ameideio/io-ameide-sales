@@ -7,7 +7,10 @@ import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import { useCallback } from 'react';
 import { AppPath } from 'twenty-shared/types';
 
-import { REACT_APP_SERVER_BASE_URL } from '~/config';
+import {
+  REACT_APP_FORCED_AUTH_PROVIDER,
+  REACT_APP_SERVER_BASE_URL,
+} from '~/config';
 import {
   type AuthToken,
   type AuthTokenPair,
@@ -479,6 +482,12 @@ export const useAuth = () => {
 
   const handleSignOut = useCallback(async () => {
     await clearSession();
+    if (REACT_APP_FORCED_AUTH_PROVIDER === 'ameideOidc') {
+      window.location.assign(
+        `${REACT_APP_SERVER_BASE_URL}/auth/ameide-oidc/logout`,
+      );
+      return;
+    }
     if (isCaptchaScriptLoaded) await requestFreshCaptchaToken();
   }, [clearSession, isCaptchaScriptLoaded, requestFreshCaptchaToken]);
 
