@@ -10,6 +10,8 @@ on:
 
 jobs:
   deploy-tag:
+    # Upstream workflow dispatches to twentyhq/twenty-infra; keep it disabled in forks.
+    if: github.repository == 'twentyhq/twenty'
     timeout-minutes: 3
     runs-on: ubuntu-latest
     steps:
