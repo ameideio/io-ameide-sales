@@ -1629,6 +1629,7 @@ type AuthProviders {
   magicLink: Boolean!
   password: Boolean!
   microsoft: Boolean!
+  ameideOidc: Boolean!
 }
 
 type AuthBypassProviders {
