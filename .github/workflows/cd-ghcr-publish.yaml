@@ -6,15 +6,6 @@ on:
       - main
     tags:
       - 'v*'
-  pull_request:
-    paths:
-      - .github/workflows/cd-ghcr-publish.yaml
-      - packages/**
-      - package.json
-      - yarn.lock
-      - nx.json
-      - tsconfig.base.json
-      - .yarn/**
   workflow_dispatch: {}
 
 permissions:
@@ -71,4 +62,3 @@ jobs:
             APP_VERSION=${{ env.APP_VERSION }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
