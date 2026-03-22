@@ -254,7 +254,8 @@ export class ConfigVariables {
   @ConfigVariablesMetadata({
     group: ConfigVariablesGroup.OTHER,
     isSensitive: false,
-    description: 'OIDC callback URL for Ameide Keycloak (must match Keycloak client redirect URI)',
+    description:
+      'OIDC callback URL for Ameide Keycloak (must match Keycloak client redirect URI)',
     type: ConfigVariableType.STRING,
   })
   @IsUrl({ require_tld: false, require_protocol: true })

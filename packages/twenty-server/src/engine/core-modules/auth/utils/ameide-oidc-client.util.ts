@@ -88,4 +88,3 @@ export const buildAmeideOidcEndSessionUrl = async (
 
   return endSessionUrl.toString();
 };
-

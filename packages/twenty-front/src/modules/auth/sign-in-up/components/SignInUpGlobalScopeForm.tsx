@@ -31,6 +31,7 @@ import {
   IconPlus,
 } from 'twenty-ui/display';
 import { ThemeContext, themeCssVariables } from 'twenty-ui/theme-constants';
+import { REACT_APP_FORCED_AUTH_PROVIDER } from '~/config';
 import { type AvailableWorkspace } from '~/generated-metadata/graphql';
 import { getWorkspaceUrl } from '~/utils/getWorkspaceUrl';
 
@@ -147,6 +148,13 @@ export const SignInUpGlobalScopeForm = () => {
   const { form } = useSignInUpForm();
   const { handleResetPassword } = useHandleResetPassword();
   const returnToPath = useAtomStateValue(returnToPathState);
+
+  if (
+    REACT_APP_FORCED_AUTH_PROVIDER === 'ameideOidc' ||
+    authProviders.ameideOidc
+  ) {
+    return null;
+  }
 
   const getAvailableWorkspaceUrl = (availableWorkspace: AvailableWorkspace) => {
     const { pathname, searchParams } = getAvailableWorkspacePathAndSearchParams(

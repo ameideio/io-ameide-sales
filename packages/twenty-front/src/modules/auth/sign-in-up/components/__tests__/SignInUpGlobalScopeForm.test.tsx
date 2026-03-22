@@ -89,6 +89,7 @@ describe('SignInUpGlobalScopeForm', () => {
       magicLink: false,
       microsoft: false,
       password: true,
+      ameideOidc: false,
       sso: [],
     });
 
@@ -110,5 +111,28 @@ describe('SignInUpGlobalScopeForm', () => {
     fireEvent.click(forgotPasswordLink);
 
     expect(resetPasswordClickMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not render the stock sign-in form when Ameide OIDC is enabled', () => {
+    jotaiStore.set(authProvidersState.atom, {
+      google: false,
+      magicLink: false,
+      microsoft: false,
+      password: false,
+      ameideOidc: true,
+      sso: [],
+    });
+
+    render(
+      <JotaiProvider store={jotaiStore}>
+        <ThemeProvider colorScheme="light">
+          <I18nProvider i18n={i18n}>
+            <SignInUpGlobalScopeForm />
+          </I18nProvider>
+        </ThemeProvider>
+      </JotaiProvider>,
+    );
+
+    expect(screen.queryByText('credentials-form')).not.toBeInTheDocument();
   });
 });

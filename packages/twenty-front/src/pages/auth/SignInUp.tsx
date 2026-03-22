@@ -22,7 +22,7 @@ import { isMultiWorkspaceEnabledState } from '@/client-config/states/isMultiWork
 import { useGetPublicWorkspaceDataByDomain } from '@/domain-manager/hooks/useGetPublicWorkspaceDataByDomain';
 import { useIsCurrentLocationOnAWorkspace } from '@/domain-manager/hooks/useIsCurrentLocationOnAWorkspace';
 import { useIsCurrentLocationOnDefaultDomain } from '@/domain-manager/hooks/useIsCurrentLocationOnDefaultDomain';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { SignInUpGlobalScopeFormEffect } from '@/auth/sign-in-up/components/internal/SignInUpGlobalScopeFormEffect';
 import { SignInUpTwoFactorAuthenticationProvision } from '@/auth/sign-in-up/components/internal/SignInUpTwoFactorAuthenticationProvision';
@@ -37,6 +37,10 @@ import { Loader } from 'twenty-ui/feedback';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 import { AnimatedEaseIn } from 'twenty-ui/utilities';
 import { type PublicWorkspaceData } from '~/generated-metadata/graphql';
+import {
+  REACT_APP_FORCED_AUTH_PROVIDER,
+  REACT_APP_SERVER_BASE_URL,
+} from '~/config';
 
 const StyledLoaderContainer = styled.div`
   align-items: center;
@@ -100,6 +104,19 @@ export const SignInUp = () => {
     useWorkspaceFromInviteHash();
 
   const [searchParams] = useSearchParams();
+  const hasTokenPair = isDefined(searchParams.get('tokenPair'));
+  const shouldForceAmeideOidcRedirect =
+    REACT_APP_FORCED_AUTH_PROVIDER === 'ameideOidc' &&
+    !hasTokenPair &&
+    signInUpStep === SignInUpStep.Init;
+
+  useEffect(() => {
+    if (!clientConfigApiStatus.isLoadedOnce || !shouldForceAmeideOidcRedirect) {
+      return;
+    }
+
+    window.location.assign(`${REACT_APP_SERVER_BASE_URL}/auth/ameide-oidc`);
+  }, [clientConfigApiStatus.isLoadedOnce, shouldForceAmeideOidcRedirect]);
 
   const onClickOnLogo = () => {
     setSignInUpStep(SignInUpStep.Init);
@@ -207,6 +224,16 @@ export const SignInUp = () => {
     return (
       <ModalContent isVerticallyCentered isHorizontallyCentered>
         <EmailVerificationSent email={searchParams.get('email')} />
+      </ModalContent>
+    );
+  }
+
+  if (shouldForceAmeideOidcRedirect) {
+    return (
+      <ModalContent isVerticallyCentered isHorizontallyCentered>
+        <StyledLoaderContainer>
+          <Loader color="gray" />
+        </StyledLoaderContainer>
       </ModalContent>
     );
   }

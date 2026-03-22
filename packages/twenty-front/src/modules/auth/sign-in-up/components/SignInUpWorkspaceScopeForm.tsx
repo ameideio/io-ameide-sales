@@ -44,9 +44,14 @@ export const SignInUpWorkspaceScopeForm = () => {
     shouldOfferBypass && shouldUseBypass
       ? {
           ...workspaceAuthBypassProviders,
+          ameideOidc: false,
           sso: [],
         }
       : workspaceAuthProviders;
+
+  if (providers.ameideOidc) {
+    return null;
+  }
 
   return (
     <>

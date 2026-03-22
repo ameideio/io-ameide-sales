@@ -927,7 +927,10 @@ export class AuthService {
       billingCheckoutSessionState,
       action,
       locale,
-    }: MicrosoftRequest['user'] | GoogleRequest['user'] | AmeideOidcRequest['user'],
+    }:
+      | MicrosoftRequest['user']
+      | GoogleRequest['user']
+      | AmeideOidcRequest['user'],
     authProvider:
       | AuthProviderEnum.Google
       | AuthProviderEnum.Microsoft
