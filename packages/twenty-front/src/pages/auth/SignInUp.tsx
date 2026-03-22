@@ -37,10 +37,7 @@ import { Loader } from 'twenty-ui/feedback';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 import { AnimatedEaseIn } from 'twenty-ui/utilities';
 import { type PublicWorkspaceData } from '~/generated-metadata/graphql';
-import {
-  REACT_APP_FORCED_AUTH_PROVIDER,
-  REACT_APP_SERVER_BASE_URL,
-} from '~/config';
+import { REACT_APP_SERVER_BASE_URL } from '~/config';
 
 const StyledLoaderContainer = styled.div`
   align-items: center;
@@ -106,9 +103,7 @@ export const SignInUp = () => {
   const [searchParams] = useSearchParams();
   const hasTokenPair = isDefined(searchParams.get('tokenPair'));
   const shouldForceAmeideOidcRedirect =
-    REACT_APP_FORCED_AUTH_PROVIDER === 'ameideOidc' &&
-    !hasTokenPair &&
-    signInUpStep === SignInUpStep.Init;
+    !hasTokenPair && signInUpStep === SignInUpStep.Init;
 
   useEffect(() => {
     if (!clientConfigApiStatus.isLoadedOnce || !shouldForceAmeideOidcRedirect) {
