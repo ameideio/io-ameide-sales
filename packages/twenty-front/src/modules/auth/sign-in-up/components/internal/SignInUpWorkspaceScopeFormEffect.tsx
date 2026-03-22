@@ -83,6 +83,7 @@ export const SignInUpWorkspaceScopeFormEffect = () => {
 
     if (
       signInUpStep === SignInUpStep.Init &&
+      !workspaceAuthProviders.ameideOidc &&
       !workspaceAuthProviders.google &&
       !workspaceAuthProviders.microsoft &&
       workspaceAuthProviders.sso.length === 0

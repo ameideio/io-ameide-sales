@@ -179,10 +179,15 @@ describe('useAuth', () => {
     );
 
     const { signOut, client } = result.current;
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     await act(async () => {
       await signOut();
     });
+
+    consoleErrorSpy.mockRestore();
 
     expect(sessionStorage.length).toBe(0);
     expect(client.cache.extract()).toEqual({});

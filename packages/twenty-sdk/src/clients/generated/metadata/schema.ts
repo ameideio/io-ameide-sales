@@ -1332,6 +1332,7 @@ export interface AuthProviders {
     magicLink: Scalars['Boolean']
     password: Scalars['Boolean']
     microsoft: Scalars['Boolean']
+    ameideOidc: Scalars['Boolean']
     __typename: 'AuthProviders'
 }
 
@@ -4285,6 +4286,7 @@ export interface AuthProvidersGenqlSelection{
     magicLink?: boolean | number
     password?: boolean | number
     microsoft?: boolean | number
+    ameideOidc?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }

@@ -3274,6 +3274,9 @@ export default {
             "microsoft": [
                 6
             ],
+            "ameideOidc": [
+                6
+            ],
             "__typename": [
                 1
             ]

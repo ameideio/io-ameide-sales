@@ -20,6 +20,7 @@ const isAuthEnabledOrThrow = (
     workspace.isMicrosoftAuthEnabled
   )
     return true;
+  if (provider === AuthProviderEnum.AmeideOidc) return true;
   if (provider === AuthProviderEnum.Password && workspace.isPasswordAuthEnabled)
     return true;
   if (provider === AuthProviderEnum.SSO) return true;
@@ -38,6 +39,7 @@ const isAuthEnabled = (
     workspace.isMicrosoftAuthEnabled
   )
     return true;
+  if (provider === AuthProviderEnum.AmeideOidc) return true;
   if (provider === AuthProviderEnum.Password && workspace.isPasswordAuthEnabled)
     return true;
 

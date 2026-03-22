@@ -7,10 +7,7 @@ import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import { useCallback } from 'react';
 import { AppPath } from 'twenty-shared/types';
 
-import {
-  REACT_APP_FORCED_AUTH_PROVIDER,
-  REACT_APP_SERVER_BASE_URL,
-} from '~/config';
+import { REACT_APP_SERVER_BASE_URL } from '~/config';
 import {
   type AuthToken,
   type AuthTokenPair,
@@ -50,7 +47,6 @@ import {
   countAvailableWorkspaces,
   getFirstAvailableWorkspaces,
 } from '@/auth/utils/availableWorkspacesUtils';
-import { useRequestFreshCaptchaToken } from '@/captcha/hooks/useRequestFreshCaptchaToken';
 import { isCaptchaScriptLoadedState } from '@/captcha/states/isCaptchaScriptLoadedState';
 import { isEmailVerificationRequiredState } from '@/client-config/states/isEmailVerificationRequiredState';
 import { isMultiWorkspaceEnabledState } from '@/client-config/states/isMultiWorkspaceEnabledState';
@@ -79,8 +75,6 @@ export const useAuth = () => {
   );
 
   const { origin } = useOrigin();
-  const { requestFreshCaptchaToken } = useRequestFreshCaptchaToken();
-  const isCaptchaScriptLoaded = useAtomStateValue(isCaptchaScriptLoadedState);
   const isMultiWorkspaceEnabled = useAtomStateValue(
     isMultiWorkspaceEnabledState,
   );
@@ -482,14 +476,10 @@ export const useAuth = () => {
 
   const handleSignOut = useCallback(async () => {
     await clearSession();
-    if (REACT_APP_FORCED_AUTH_PROVIDER === 'ameideOidc') {
-      window.location.assign(
-        `${REACT_APP_SERVER_BASE_URL}/auth/ameide-oidc/logout`,
-      );
-      return;
-    }
-    if (isCaptchaScriptLoaded) await requestFreshCaptchaToken();
-  }, [clearSession, isCaptchaScriptLoaded, requestFreshCaptchaToken]);
+    window.location.assign(
+      `${REACT_APP_SERVER_BASE_URL}/auth/ameide-oidc/logout`,
+    );
+  }, [clearSession]);
 
   const handleCredentialsSignUpInWorkspace = useCallback(
     async ({

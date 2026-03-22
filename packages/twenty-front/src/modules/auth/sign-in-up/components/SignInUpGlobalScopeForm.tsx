@@ -148,6 +148,10 @@ export const SignInUpGlobalScopeForm = () => {
   const { handleResetPassword } = useHandleResetPassword();
   const returnToPath = useAtomStateValue(returnToPathState);
 
+  if (authProviders.ameideOidc) {
+    return null;
+  }
+
   const getAvailableWorkspaceUrl = (availableWorkspace: AvailableWorkspace) => {
     const { pathname, searchParams } = getAvailableWorkspacePathAndSearchParams(
       availableWorkspace,

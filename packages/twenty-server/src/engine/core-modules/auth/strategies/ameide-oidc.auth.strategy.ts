@@ -103,8 +103,7 @@ export class AmeideOidcAuthStrategy extends PassportStrategy(
         email,
         firstName: userinfo.given_name,
         lastName: userinfo.family_name,
-        picture:
-          typeof userinfo.picture === 'string' ? userinfo.picture : null,
+        picture: typeof userinfo.picture === 'string' ? userinfo.picture : null,
         workspaceInviteHash: state?.workspaceInviteHash,
         workspacePersonalInviteToken: state?.workspacePersonalInviteToken,
         workspaceId: state?.workspaceId,
