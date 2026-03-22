@@ -187,7 +187,7 @@ export class UserWorkspaceService extends TypeOrmQueryService<UserWorkspaceEntit
     await this.onboardingService.setOnboardingCreateProfilePending({
       userId: user.id,
       workspaceId: workspace.id,
-      value: true,
+      value: !user.firstName && !user.lastName,
     });
   }
 

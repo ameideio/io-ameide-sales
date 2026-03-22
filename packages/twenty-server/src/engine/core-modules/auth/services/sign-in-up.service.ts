@@ -328,7 +328,7 @@ export class SignInUpService {
       );
     }
 
-    if (user.firstName === '' && user.lastName === '') {
+    if (!user.firstName && !user.lastName) {
       await this.onboardingService.setOnboardingCreateProfilePending(
         {
           userId: user.id,
