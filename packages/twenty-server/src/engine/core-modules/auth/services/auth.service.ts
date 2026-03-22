@@ -879,7 +879,7 @@ export class AuthService {
   }
 
   private async clearAmeideOidcOnboardingState(
-    user: UserEntity,
+    user: Pick<UserEntity, 'id'>,
     workspace: WorkspaceEntity,
   ) {
     await this.onboardingService.setOnboardingCreateProfilePending({

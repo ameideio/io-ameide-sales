@@ -205,7 +205,8 @@ describe('AuthService', () => {
     userRepository = testingModule.get<Repository<UserEntity>>(
       getRepositoryToken(UserEntity),
     );
-    permissionsService = testingModule.get<PermissionsService>(PermissionsService);
+    permissionsService =
+      testingModule.get<PermissionsService>(PermissionsService);
     onboardingService = testingModule.get<OnboardingService>(OnboardingService);
     signInUpServiceMock = testingModule.get(SignInUpService) as jest.Mocked<
       Pick<SignInUpService, 'validatePassword'>
@@ -228,7 +229,7 @@ describe('AuthService', () => {
       firstName: '',
       lastName: '',
       userWorkspaces: [],
-    } as UserEntity;
+    } as unknown as UserEntity;
     const workspace = {
       id: 'workspace-id',
     } as WorkspaceEntity;
@@ -236,7 +237,7 @@ describe('AuthService', () => {
       ...existingUser,
       firstName: 'Tim',
       lastName: 'Cook',
-    } as UserEntity;
+    } as unknown as UserEntity;
     const loginTokenService = testingModule.get(LoginTokenService) as {
       generateLoginToken?: jest.Mock;
     };
@@ -245,13 +246,13 @@ describe('AuthService', () => {
       .spyOn(userService, 'findUserByEmailWithWorkspaces')
       .mockResolvedValue(existingUser);
     jest.spyOn(userRepository, 'save').mockResolvedValue(savedUser);
-    jest
-      .spyOn(service, 'countAvailableWorkspacesByEmail')
-      .mockResolvedValue(0);
+    jest.spyOn(service, 'countAvailableWorkspacesByEmail').mockResolvedValue(0);
     jest
       .spyOn(service, 'findWorkspaceForSignInUp')
       .mockResolvedValue(workspace);
-    jest.spyOn(service, 'findInvitationForSignInUp').mockResolvedValue(null);
+    jest
+      .spyOn(service, 'findInvitationForSignInUp')
+      .mockResolvedValue(undefined);
     jest.spyOn(service, 'checkAccessForSignIn').mockResolvedValue(undefined);
     jest.spyOn(service, 'signInUp').mockResolvedValue({
       user: savedUser,
@@ -306,12 +307,12 @@ describe('AuthService', () => {
       workspaceId: workspace.id,
       value: false,
     });
-    expect(onboardingService.setOnboardingInviteTeamPending).toHaveBeenCalledWith(
-      {
-        workspaceId: workspace.id,
-        value: false,
-      },
-    );
+    expect(
+      onboardingService.setOnboardingInviteTeamPending,
+    ).toHaveBeenCalledWith({
+      workspaceId: workspace.id,
+      value: false,
+    });
     expect(
       onboardingService.setOnboardingBookOnboardingPending,
     ).toHaveBeenCalledWith({
