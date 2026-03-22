@@ -22,6 +22,7 @@ import { WorkspaceDomainsService } from 'src/engine/core-modules/domain/workspac
 import { EmailService } from 'src/engine/core-modules/email/email.service';
 import { GuardRedirectService } from 'src/engine/core-modules/guard-redirect/services/guard-redirect.service';
 import { I18nService } from 'src/engine/core-modules/i18n/i18n.service';
+import { OnboardingService } from 'src/engine/core-modules/onboarding/onboarding.service';
 import { TwentyConfigService } from 'src/engine/core-modules/twenty-config/twenty-config.service';
 import { UserWorkspaceService } from 'src/engine/core-modules/user-workspace/user-workspace.service';
 import { UserService } from 'src/engine/core-modules/user/services/user.service';
@@ -39,6 +40,7 @@ jest.mock('bcrypt');
 const twentyConfigServiceGetMock = jest.fn();
 
 describe('AuthService', () => {
+  let testingModule: TestingModule;
   let service: AuthService;
   let userService: UserService;
   let workspaceRepository: Repository<WorkspaceEntity>;
@@ -47,12 +49,13 @@ describe('AuthService', () => {
   let userWorkspaceService: UserWorkspaceService;
   let workspaceInvitationService: WorkspaceInvitationService;
   let permissionsService: PermissionsService;
+  let onboardingService: OnboardingService;
   let signInUpServiceMock: jest.Mocked<
     Pick<SignInUpService, 'validatePassword'>
   >;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    testingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         {
@@ -65,6 +68,7 @@ describe('AuthService', () => {
           provide: getRepositoryToken(UserEntity),
           useValue: {
             findOne: jest.fn(),
+            save: jest.fn(),
           },
         },
         {
@@ -112,6 +116,15 @@ describe('AuthService', () => {
           },
         },
         {
+          provide: OnboardingService,
+          useValue: {
+            setOnboardingCreateProfilePending: jest.fn(),
+            setOnboardingConnectAccountPending: jest.fn(),
+            setOnboardingInviteTeamPending: jest.fn(),
+            setOnboardingBookOnboardingPending: jest.fn(),
+          },
+        },
+        {
           provide: EmailService,
           useValue: {},
         },
@@ -135,6 +148,7 @@ describe('AuthService', () => {
           provide: UserService,
           useValue: {
             hasUserAccessToWorkspaceOrThrow: jest.fn(),
+            findUserByEmailWithWorkspaces: jest.fn(),
           },
         },
         {
@@ -177,22 +191,24 @@ describe('AuthService', () => {
       ],
     }).compile();
 
-    service = module.get<AuthService>(AuthService);
-    userService = module.get<UserService>(UserService);
-    workspaceInvitationService = module.get<WorkspaceInvitationService>(
+    service = testingModule.get<AuthService>(AuthService);
+    userService = testingModule.get<UserService>(UserService);
+    workspaceInvitationService = testingModule.get<WorkspaceInvitationService>(
       WorkspaceInvitationService,
     );
-    authSsoService = module.get<AuthSsoService>(AuthSsoService);
+    authSsoService = testingModule.get<AuthSsoService>(AuthSsoService);
     userWorkspaceService =
-      module.get<UserWorkspaceService>(UserWorkspaceService);
-    workspaceRepository = module.get<Repository<WorkspaceEntity>>(
+      testingModule.get<UserWorkspaceService>(UserWorkspaceService);
+    workspaceRepository = testingModule.get<Repository<WorkspaceEntity>>(
       getRepositoryToken(WorkspaceEntity),
     );
-    userRepository = module.get<Repository<UserEntity>>(
+    userRepository = testingModule.get<Repository<UserEntity>>(
       getRepositoryToken(UserEntity),
     );
-    permissionsService = module.get<PermissionsService>(PermissionsService);
-    signInUpServiceMock = module.get(SignInUpService) as jest.Mocked<
+    permissionsService =
+      testingModule.get<PermissionsService>(PermissionsService);
+    onboardingService = testingModule.get<OnboardingService>(OnboardingService);
+    signInUpServiceMock = testingModule.get(SignInUpService) as jest.Mocked<
       Pick<SignInUpService, 'validatePassword'>
     >;
   });
@@ -204,6 +220,106 @@ describe('AuthService', () => {
 
   it('should be defined', async () => {
     expect(service).toBeDefined();
+  });
+
+  it('backfills missing user names from Ameide OIDC and clears stock onboarding', async () => {
+    const existingUser = {
+      id: 'user-id',
+      email: 'admin@ameide.io',
+      firstName: '',
+      lastName: '',
+      userWorkspaces: [],
+    } as unknown as UserEntity;
+    const workspace = {
+      id: 'workspace-id',
+    } as WorkspaceEntity;
+    const savedUser = {
+      ...existingUser,
+      firstName: 'Tim',
+      lastName: 'Cook',
+    } as unknown as UserEntity;
+    const loginTokenService = testingModule.get(LoginTokenService) as {
+      generateLoginToken?: jest.Mock;
+    };
+
+    jest
+      .spyOn(userService, 'findUserByEmailWithWorkspaces')
+      .mockResolvedValue(existingUser);
+    jest.spyOn(userRepository, 'save').mockResolvedValue(savedUser);
+    jest.spyOn(service, 'countAvailableWorkspacesByEmail').mockResolvedValue(0);
+    jest
+      .spyOn(service, 'findWorkspaceForSignInUp')
+      .mockResolvedValue(workspace);
+    jest
+      .spyOn(service, 'findInvitationForSignInUp')
+      .mockResolvedValue(undefined);
+    jest.spyOn(service, 'checkAccessForSignIn').mockResolvedValue(undefined);
+    jest.spyOn(service, 'signInUp').mockResolvedValue({
+      user: savedUser,
+      workspace,
+    });
+    loginTokenService.generateLoginToken = jest
+      .fn()
+      .mockResolvedValue({ token: 'login-token' });
+    jest
+      .spyOn(service, 'computeRedirectURI')
+      .mockReturnValue('https://sales.ameide.io');
+
+    const result = await service.signInUpWithSocialSSO(
+      {
+        email: 'admin@ameide.io',
+        firstName: 'Tim',
+        lastName: 'Cook',
+      } as any,
+      AuthProviderEnum.AmeideOidc,
+    );
+
+    expect(userRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: existingUser.id,
+        firstName: 'Tim',
+        lastName: 'Cook',
+      }),
+    );
+    expect(service.signInUp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userData: {
+          type: 'existingUser',
+          existingUser: expect.objectContaining({
+            id: existingUser.id,
+            firstName: 'Tim',
+            lastName: 'Cook',
+          }),
+        },
+      }),
+    );
+    expect(
+      onboardingService.setOnboardingCreateProfilePending,
+    ).toHaveBeenCalledWith({
+      userId: existingUser.id,
+      workspaceId: workspace.id,
+      value: false,
+    });
+    expect(
+      onboardingService.setOnboardingConnectAccountPending,
+    ).toHaveBeenCalledWith({
+      userId: existingUser.id,
+      workspaceId: workspace.id,
+      value: false,
+    });
+    expect(
+      onboardingService.setOnboardingInviteTeamPending,
+    ).toHaveBeenCalledWith({
+      workspaceId: workspace.id,
+      value: false,
+    });
+    expect(
+      onboardingService.setOnboardingBookOnboardingPending,
+    ).toHaveBeenCalledWith({
+      workspaceId: workspace.id,
+      value: false,
+    });
+    expect(result).toBe('https://sales.ameide.io');
   });
 
   it('challenge - user already member of workspace', async () => {

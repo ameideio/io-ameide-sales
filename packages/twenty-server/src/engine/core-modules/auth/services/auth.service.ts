@@ -61,6 +61,7 @@ import { WorkspaceDomainConfig } from 'src/engine/core-modules/domain/workspace-
 import { EmailService } from 'src/engine/core-modules/email/email.service';
 import { GuardRedirectService } from 'src/engine/core-modules/guard-redirect/services/guard-redirect.service';
 import { I18nService } from 'src/engine/core-modules/i18n/i18n.service';
+import { OnboardingService } from 'src/engine/core-modules/onboarding/onboarding.service';
 import { TwentyConfigService } from 'src/engine/core-modules/twenty-config/twenty-config.service';
 import { UserWorkspaceService } from 'src/engine/core-modules/user-workspace/user-workspace.service';
 import { UserService } from 'src/engine/core-modules/user/services/user.service';
@@ -87,6 +88,7 @@ export class AuthService {
     private readonly authSsoService: AuthSsoService,
     private readonly userService: UserService,
     private readonly signInUpService: SignInUpService,
+    private readonly onboardingService: OnboardingService,
     private readonly permissionsService: PermissionsService,
     @InjectRepository(WorkspaceEntity)
     private readonly workspaceRepository: Repository<WorkspaceEntity>,
@@ -849,6 +851,57 @@ export class AuthService {
     };
   }
 
+  private async backfillExistingUserIdentityProfile(
+    existingUser: UserEntity,
+    {
+      firstName,
+      lastName,
+    }: {
+      firstName?: string | null;
+      lastName?: string | null;
+    },
+  ): Promise<UserEntity> {
+    const nextFirstName = existingUser.firstName || firstName || '';
+    const nextLastName = existingUser.lastName || lastName || '';
+
+    if (
+      nextFirstName === existingUser.firstName &&
+      nextLastName === existingUser.lastName
+    ) {
+      return existingUser;
+    }
+
+    return await this.userRepository.save({
+      ...existingUser,
+      firstName: nextFirstName,
+      lastName: nextLastName,
+    });
+  }
+
+  private async clearAmeideOidcOnboardingState(
+    user: Pick<UserEntity, 'id'>,
+    workspace: WorkspaceEntity,
+  ) {
+    await this.onboardingService.setOnboardingCreateProfilePending({
+      userId: user.id,
+      workspaceId: workspace.id,
+      value: false,
+    });
+    await this.onboardingService.setOnboardingConnectAccountPending({
+      userId: user.id,
+      workspaceId: workspace.id,
+      value: false,
+    });
+    await this.onboardingService.setOnboardingInviteTeamPending({
+      workspaceId: workspace.id,
+      value: false,
+    });
+    await this.onboardingService.setOnboardingBookOnboardingPending({
+      workspaceId: workspace.id,
+      value: false,
+    });
+  }
+
   async checkAccessForSignIn({
     userData,
     invitation,
@@ -943,8 +996,18 @@ export class AuthService {
         ? await this.countAvailableWorkspacesByEmail(email)
         : 0;
 
-    const existingUser =
+    let existingUser =
       await this.userService.findUserByEmailWithWorkspaces(email);
+
+    if (authProvider === AuthProviderEnum.AmeideOidc && existingUser) {
+      existingUser = await this.backfillExistingUserIdentityProfile(
+        existingUser,
+        {
+          firstName,
+          lastName,
+        },
+      );
+    }
 
     if (
       !workspaceId &&
@@ -1037,6 +1100,10 @@ export class AuthService {
         },
         billingCheckoutSessionState,
       });
+
+      if (authProvider === AuthProviderEnum.AmeideOidc) {
+        await this.clearAmeideOidcOnboardingState(user, workspace);
+      }
 
       const loginToken = await this.loginTokenService.generateLoginToken(
         user.email,

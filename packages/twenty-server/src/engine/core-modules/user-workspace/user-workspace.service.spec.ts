@@ -300,6 +300,8 @@ describe('UserWorkspaceService', () => {
       const user = {
         id: 'user-id',
         email: 'test@example.com',
+        firstName: '',
+        lastName: '',
       } as UserEntity;
       const workspace = {
         id: 'workspace-id',
@@ -354,6 +356,44 @@ describe('UserWorkspaceService', () => {
         userId: user.id,
         workspaceId: workspace.id,
         value: true,
+      });
+    });
+
+    it('should not require profile creation when existing user already has names', async () => {
+      const user = {
+        id: 'user-id',
+        email: 'test@example.com',
+        firstName: 'Tim',
+        lastName: 'Cook',
+      } as UserEntity;
+      const workspace = {
+        id: 'workspace-id',
+        defaultRoleId: 'default-role-id',
+      } as WorkspaceEntity;
+      const userWorkspace = {
+        id: 'user-workspace-id',
+        userId: user.id,
+        workspaceId: workspace.id,
+      } as UserWorkspaceEntity;
+
+      jest.spyOn(service, 'checkUserWorkspaceExists').mockResolvedValue(null);
+      jest.spyOn(service, 'create').mockResolvedValue(userWorkspace);
+      jest.spyOn(service, 'createWorkspaceMember').mockResolvedValue(undefined);
+      jest
+        .spyOn(userRoleService, 'assignRoleToManyUserWorkspace')
+        .mockResolvedValue(undefined);
+      jest
+        .spyOn(workspaceInvitationService, 'invalidateWorkspaceInvitation')
+        .mockResolvedValue(undefined);
+
+      await service.addUserToWorkspaceIfUserNotInWorkspace(user, workspace);
+
+      expect(
+        onboardingService.setOnboardingCreateProfilePending,
+      ).toHaveBeenCalledWith({
+        userId: user.id,
+        workspaceId: workspace.id,
+        value: false,
       });
     });
 
