@@ -48,6 +48,15 @@
           "yarn playwright show-report"
         ]
       }
+    },
+    "test:oidc": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "packages/twenty-e2e-testing",
+        "commands": [
+          "bash ./scripts/run-oidc-e2e.sh"
+        ]
+      }
     }
   }
 }

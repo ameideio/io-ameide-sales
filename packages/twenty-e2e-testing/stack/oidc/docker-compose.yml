@@ -1,0 +1,100 @@
+name: twenty-e2e-oidc
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3.0
+    command:
+      - start-dev
+      - --import-realm
+      - --http-port=8080
+      - --hostname-strict=false
+      - --hostname-strict-https=false
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak/realm-ameide.json:/opt/keycloak/data/import/realm-ameide.json:ro
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: default
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+    healthcheck:
+      test: pg_isready -U postgres -h localhost -d postgres
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    command: ["--maxmemory-policy", "noeviction"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  server:
+    build:
+      context: ../../..
+      dockerfile: ./packages/twenty-docker/twenty/Dockerfile
+      args:
+        APP_VERSION: e2e-oidc
+    platform: linux/amd64
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_PORT: 3000
+      PG_DATABASE_URL: postgres://postgres:postgres@db:5432/default
+      REDIS_URL: redis://redis:6379
+      SERVER_URL: http://localhost:3000
+      APP_SECRET: e2e-oidc-secret
+
+      AUTH_AMEIDE_OIDC_ENABLED: "true"
+      AUTH_AMEIDE_OIDC_ISSUER_URL: http://keycloak:8080/realms/ameide
+      AUTH_AMEIDE_OIDC_CLIENT_ID: twenty
+      AUTH_AMEIDE_OIDC_CLIENT_SECRET: twenty-secret
+      AUTH_AMEIDE_OIDC_CALLBACK_URL: http://localhost:3000/auth/ameide-oidc/redirect
+      AUTH_AMEIDE_OIDC_POST_LOGOUT_REDIRECT_URL: http://localhost:3000/
+      REACT_APP_FORCED_AUTH_PROVIDER: ameideOidc
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "sh", "-lc", "curl -fsS http://localhost:3000/healthz >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ../../..
+      dockerfile: ./packages/twenty-docker/twenty/Dockerfile
+      args:
+        APP_VERSION: e2e-oidc
+    platform: linux/amd64
+    command: ["yarn", "worker:prod"]
+    environment:
+      PG_DATABASE_URL: postgres://postgres:postgres@db:5432/default
+      REDIS_URL: redis://redis:6379
+      SERVER_URL: http://localhost:3000
+      DISABLE_DB_MIGRATIONS: "true"
+      DISABLE_CRON_JOBS_REGISTRATION: "true"
+      APP_SECRET: e2e-oidc-secret
+      AUTH_AMEIDE_OIDC_ENABLED: "true"
+      AUTH_AMEIDE_OIDC_ISSUER_URL: http://keycloak:8080/realms/ameide
+      AUTH_AMEIDE_OIDC_CLIENT_ID: twenty
+      AUTH_AMEIDE_OIDC_CLIENT_SECRET: twenty-secret
+      AUTH_AMEIDE_OIDC_CALLBACK_URL: http://localhost:3000/auth/ameide-oidc/redirect
+      AUTH_AMEIDE_OIDC_POST_LOGOUT_REDIRECT_URL: http://localhost:3000/
+    depends_on:
+      server:
+        condition: service_healthy
+    restart: unless-stopped

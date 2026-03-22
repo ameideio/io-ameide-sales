@@ -1,0 +1,37 @@
+{
+  "realm": "ameide",
+  "enabled": true,
+  "displayName": "Ameide (E2E)",
+  "clients": [
+    {
+      "clientId": "twenty",
+      "name": "Twenty (E2E)",
+      "protocol": "openid-connect",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "twenty-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://localhost:3000/auth/ameide-oidc/redirect"],
+      "webOrigins": ["http://localhost:3000"]
+    }
+  ],
+  "users": [
+    {
+      "username": "tim@apple.dev",
+      "email": "tim@apple.dev",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Tim",
+      "lastName": "Apple",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "tim@apple.dev",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}
+

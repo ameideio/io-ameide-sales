@@ -52,6 +52,14 @@ export default defineConfig({
       },
       dependencies: ['setup'],
     },
+    {
+      // OIDC tests manage their own login flow (no shared setup/storageState).
+      name: 'oidc',
+      use: {
+        ...devices['Desktop Chrome'],
+        permissions: ['clipboard-read', 'clipboard-write'],
+      },
+    },
 
     //{
     //  name: 'webkit',
