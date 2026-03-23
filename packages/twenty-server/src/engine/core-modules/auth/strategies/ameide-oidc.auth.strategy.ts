@@ -99,6 +99,12 @@ export class AmeideOidcAuthStrategy extends PassportStrategy(
         );
       }
 
+      const session = (req as unknown as { session?: Record<string, unknown> })
+        .session;
+      if (session && typeof tokenset.id_token === 'string') {
+        session.ameideOidcIdToken = tokenset.id_token;
+      }
+
       done(null, {
         email,
         firstName: userinfo.given_name,

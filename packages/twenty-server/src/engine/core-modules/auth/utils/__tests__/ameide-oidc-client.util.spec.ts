@@ -78,4 +78,33 @@ describe('buildAmeideOidcEndSessionUrl', () => {
       'https://sales.ameide.io/logged-out',
     );
   });
+
+  it('includes id_token_hint when provided', async () => {
+    (Issuer.discover as unknown as jest.Mock).mockResolvedValue({
+      Client: jest.fn().mockImplementation(() => ({})),
+      metadata: {
+        issuer: 'https://idp.example.test/realms/ameide',
+        end_session_endpoint:
+          'https://idp.example.test/realms/ameide/protocol/openid-connect/logout',
+      },
+    });
+
+    const configService = createConfigService({
+      AUTH_AMEIDE_OIDC_ISSUER_URL: 'https://idp.example.test/realms/ameide',
+      AUTH_AMEIDE_OIDC_CLIENT_ID: 'twenty',
+      AUTH_AMEIDE_OIDC_CALLBACK_URL:
+        'https://sales.ameide.io/auth/ameide-oidc/redirect',
+      AUTH_AMEIDE_OIDC_POST_LOGOUT_REDIRECT_URL: 'https://sales.ameide.io/',
+    });
+
+    const url = await buildAmeideOidcEndSessionUrl(
+      configService,
+      'header.payload.signature',
+    );
+
+    const parsed = new URL(url);
+    expect(parsed.searchParams.get('id_token_hint')).toBe(
+      'header.payload.signature',
+    );
+  });
 });

@@ -7,7 +7,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-import { Response } from 'express';
+import { type Request, Response } from 'express';
 
 import { AuthOAuthExceptionFilter } from 'src/engine/core-modules/auth/filters/auth-oauth-exception.filter';
 import { AuthRestApiExceptionFilter } from 'src/engine/core-modules/auth/filters/auth-rest-api-exception.filter';
@@ -63,12 +63,38 @@ export class AmeideOidcAuthController {
 
   @Get('logout')
   @UseGuards(PublicEndpointGuard, NoPermissionGuard)
-  async ameideOidcLogout(@Res() res: Response) {
+  async ameideOidcLogout(@Req() req: Request, @Res() res: Response) {
     if (!this.twentyConfigService.get('AUTH_AMEIDE_OIDC_ENABLED')) {
       return res.redirect('/');
     }
 
-    const url = await buildAmeideOidcEndSessionUrl(this.twentyConfigService);
+    const session = (req as unknown as { session?: Record<string, unknown> })
+      .session;
+    const idTokenHint =
+      session && typeof session.ameideOidcIdToken === 'string'
+        ? session.ameideOidcIdToken
+        : undefined;
+
+    if (session) {
+      delete session.ameideOidcIdToken;
+    }
+
+    const url = await buildAmeideOidcEndSessionUrl(
+      this.twentyConfigService,
+      idTokenHint,
+    );
+
+    const sessionWithDestroy = (req as unknown as {
+      session?: { destroy?: (cb: (err?: unknown) => void) => void };
+    }).session;
+    if (typeof sessionWithDestroy?.destroy === 'function') {
+      return await new Promise<void>((resolve) => {
+        sessionWithDestroy.destroy(() => {
+          res.redirect(url);
+          resolve();
+        });
+      });
+    }
 
     return res.redirect(url);
   }

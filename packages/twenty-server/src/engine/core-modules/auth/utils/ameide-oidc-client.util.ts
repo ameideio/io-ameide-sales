@@ -62,6 +62,7 @@ export const getAmeideOidcClient = async (
 
 export const buildAmeideOidcEndSessionUrl = async (
   twentyConfigService: TwentyConfigService,
+  idTokenHint?: string,
 ): Promise<string> => {
   const issuer = await getAmeideOidcIssuer(twentyConfigService);
   const postLogoutRedirectUrl = twentyConfigService.get(
@@ -85,7 +86,9 @@ export const buildAmeideOidcEndSessionUrl = async (
     'post_logout_redirect_uri',
     postLogoutRedirectUrl,
   );
+  if (idTokenHint) {
+    endSessionUrl.searchParams.set('id_token_hint', idTokenHint);
+  }
 
   return endSessionUrl.toString();
 };
-
