@@ -68,7 +68,7 @@ jobs:
 
     steps:
       - name: Checkout current branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 10
 
@@ -584,7 +584,7 @@ jobs:
 
       - name: Upload breaking changes report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: breaking-changes-report
           path: |
