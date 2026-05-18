@@ -28,7 +28,7 @@ jobs:
     needs: changed-files-check
     if: needs.changed-files-check.outputs.any_changed == 'true'
     timeout-minutes: 30
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.AMEIDE_RUNS_ON }}
     env:
       NODE_OPTIONS: '--max-old-space-size=4096'
       TASK_CACHE_KEY: front-task-${{ matrix.task }}
@@ -70,7 +70,7 @@ jobs:
     needs: changed-files-check
     if: needs.changed-files-check.outputs.any_changed == 'true'
     timeout-minutes: 30
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.AMEIDE_RUNS_ON }}
     env:
       NODE_OPTIONS: "--max-old-space-size=10240"
       ANALYZE: "true"
@@ -98,7 +98,7 @@ jobs:
   ci-front-status-check:
     if: always() && !cancelled()
     timeout-minutes: 5
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.AMEIDE_RUNS_ON }}
     needs:
       [
         changed-files-check,
